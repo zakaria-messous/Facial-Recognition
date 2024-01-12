@@ -11,7 +11,7 @@ public class Application {
 		
 		SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                new RegisterForm();
+                new LoginFrame();
             }
         });
 	}
