@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class CRUDOperations {
     private static final String INSERT_QUERY = "INSERT INTO user (firstname, lastname, email, password) VALUES (?, ?, ?, ?)";
@@ -14,18 +15,33 @@ public class CRUDOperations {
     private static final String LOGIN_QUERY = "SELECT id, email, password FROM user";
 
     public static String insertData(String value1, String value2, String value3, String value4) {
-        try (Connection connection = DBConnector.connect();
-             PreparedStatement preparedStatement = connection.prepareStatement(INSERT_QUERY)) {
-            preparedStatement.setString(1, value1);
-            preparedStatement.setString(2, value2);
-            preparedStatement.setString(3, value3);
-            preparedStatement.setString(4, value4);
-            preparedStatement.executeUpdate();
-            return "-1";
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return e.getMessage();
-        }
+    	try (Connection connection = DBConnector.connect();
+    		     PreparedStatement preparedStatement = connection.prepareStatement(INSERT_QUERY, Statement.RETURN_GENERATED_KEYS)) {
+    		    preparedStatement.setString(1, value1);
+    		    preparedStatement.setString(2, value2);
+    		    preparedStatement.setString(3, value3);
+    		    preparedStatement.setString(4, value4);
+
+    		    int affectedRows = preparedStatement.executeUpdate();
+
+    		    if (affectedRows > 0) {
+    		        // Retrieve the generated keys
+    		        try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
+    		            if (generatedKeys.next()) {
+    		                int generatedId = generatedKeys.getInt(1);
+    		                return String.valueOf(generatedId);
+    		            } else {
+    		                throw new SQLException("Insertion failed, no ID obtained.");
+    		            }
+    		        }
+    		    } else {
+    		        return "-1";
+    		    }
+    		} catch (SQLException e) {
+    		    e.printStackTrace();
+    		    return e.getMessage();
+    		}
+
     }
     
     public static String updateData(int id, String updatedValue1, String updatedValue2, String updatedValue3, String updatedValue4) {

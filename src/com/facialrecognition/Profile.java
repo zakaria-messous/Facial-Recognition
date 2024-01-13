@@ -16,6 +16,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 public class Profile extends JFrame implements ActionListener{
 	
@@ -138,7 +139,11 @@ public class Profile extends JFrame implements ActionListener{
 		if(e.getSource()==logoutButton)
 		{
 			this.dispose();
-			LoginFrame login = new LoginFrame();
+			SwingUtilities.invokeLater(new Runnable() {
+	            public void run() {
+	            	new LoginFrame();
+	            }
+	        });
 		}
 	}
 }

@@ -8,7 +8,10 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -16,9 +19,21 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.videoio.VideoCapture;
 
 public class RegisterFrame extends JFrame implements ActionListener{
 	
+	private int id;
+	private JLabel cameraScreen;
+	private VideoCapture capture;
+	private Mat image;
+	private boolean clicked = false;
+
 	JTextField firstNameField;
 	JTextField lastNameField;
 	JTextField emailField;
@@ -33,6 +48,7 @@ public class RegisterFrame extends JFrame implements ActionListener{
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         
+        cameraScreen = new JLabel();
         // components
         JLabel lblTitle = new JLabel("Registration");
         lblTitle.setFont(new Font(null, Font.BOLD, 40));
@@ -70,10 +86,8 @@ public class RegisterFrame extends JFrame implements ActionListener{
         JPanel leftPanel = new JPanel(new BorderLayout());
         leftPanel.setBackground(Color.LIGHT_GRAY);
         JPanel rightPanel = new JPanel(null);
-        //rightPanel.setBackground(Color.CYAN);
         
         JPanel registerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        //loginPanel.setBackground(Color.GRAY);
         registerPanel.setSize(new Dimension(360, 600));
         registerPanel.setBounds(140, 50, 360, 600);
         
@@ -92,12 +106,54 @@ public class RegisterFrame extends JFrame implements ActionListener{
         
         rightPanel.add(registerPanel);
         
+        leftPanel.add(cameraScreen);
+		
+		addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e)
+			{
+				super.windowClosing(e);
+				capture.release();
+				image.release();
+				System.exit(0);
+			}
+		});
+        
         setLayout(new GridLayout(1, 2));
         add(leftPanel);
         add(rightPanel);
         
         setLocationRelativeTo(null);
         setVisible(true);
+	}
+	
+	public void startCamera()
+	{
+		capture = new VideoCapture(0);
+		image = new Mat();
+		byte[] imageData;
+		
+		ImageIcon icon;
+		
+		while(true)
+		{
+			//read image to matrix
+			capture.read(image);
+			
+			final MatOfByte buf = new MatOfByte();
+			Imgcodecs.imencode(".jpg", image, buf);
+			
+			imageData = buf.toArray();
+			//add to JLabel
+			icon = new ImageIcon(imageData);
+			cameraScreen.setIcon(icon);
+			//capture and save to file
+			if(clicked)
+			{
+				Imgcodecs.imwrite("images/"+id+".jpg", image);
+				clicked = false;
+			}
+		}
 	}
 
 	@Override
@@ -106,7 +162,11 @@ public class RegisterFrame extends JFrame implements ActionListener{
 		if(e.getSource()==goToButton)
 		{
 			this.dispose();
-			LoginFrame login = new LoginFrame();
+			SwingUtilities.invokeLater(new Runnable() {
+	            public void run() {
+	            	new LoginFrame();
+	            }
+	        });
 		}
 		
 		if(e.getSource()==registerButton)
@@ -117,15 +177,26 @@ public class RegisterFrame extends JFrame implements ActionListener{
 			String password = passwordField.getText();
 			
 			String output = CRUDOperations.insertData(firstName, lastName, email, password);
-			if(output == "-1")
+			
+			try
 			{
+				id = Integer.parseInt(output);
+				if(id <= 0) throw new Exception("Invalid ID");
+				clicked = true;
+				
 				JOptionPane.showMessageDialog(null, "Registered!", "Info", JOptionPane.INFORMATION_MESSAGE);
 				
 				this.dispose();
-				LoginFrame login = new LoginFrame();
+				SwingUtilities.invokeLater(new Runnable() {
+		            public void run() {
+		            	new LoginFrame();
+		            }
+		        });
 			}
-			else
+			catch (Exception ex)
+			{
 				JOptionPane.showMessageDialog(null, output, "Error", JOptionPane.ERROR_MESSAGE);
+			}
 		}
 	}
 }

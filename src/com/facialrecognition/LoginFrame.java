@@ -15,6 +15,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 
 public class LoginFrame extends JFrame implements ActionListener{
 	
@@ -90,7 +91,20 @@ public class LoginFrame extends JFrame implements ActionListener{
 		if(e.getSource()==goToButton)
 		{
 			this.dispose();
-			RegisterFrame register = new RegisterFrame();
+			
+			SwingUtilities.invokeLater(new Runnable() {
+	            public void run() {
+	            	RegisterFrame registerFrame = new RegisterFrame();
+	            	//New thread for Camera input
+	                new Thread(new Runnable() {
+	        			@Override
+	        			public void run()
+	        			{
+	        				registerFrame.startCamera();
+	        			}
+	        		}).start();
+	            }
+	        });
 		}
 		
 		if(e.getSource()==loginButton)
@@ -103,7 +117,11 @@ public class LoginFrame extends JFrame implements ActionListener{
 			if(result == -1) return;
 			
 			this.dispose();
-			Profile profile = new Profile(result);
+			SwingUtilities.invokeLater(new Runnable() {
+	            public void run() {
+	            	new Profile(result);
+	            }
+	        });
 		}
 	}
 }
