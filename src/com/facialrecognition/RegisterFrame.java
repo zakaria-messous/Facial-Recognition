@@ -164,7 +164,18 @@ public class RegisterFrame extends JFrame implements ActionListener{
 			this.dispose();
 			SwingUtilities.invokeLater(new Runnable() {
 	            public void run() {
-	            	new LoginFrame();
+	            	FacialRecognation facialRecognation = new FacialRecognation();
+					facialRecognation.loadCascade();
+					LoginFrame loginFrame = new LoginFrame(facialRecognation);
+	                
+	                //New thread for Camera input
+	                new Thread(new Runnable() {
+	        			@Override
+	        			public void run()
+	        			{
+	        				loginFrame.runMainLoop();
+	        			}
+	        		}).start();
 	            }
 	        });
 		}
@@ -189,7 +200,18 @@ public class RegisterFrame extends JFrame implements ActionListener{
 				this.dispose();
 				SwingUtilities.invokeLater(new Runnable() {
 		            public void run() {
-		            	new LoginFrame();
+		            	FacialRecognation facialRecognation = new FacialRecognation();
+						facialRecognation.loadCascade();
+						LoginFrame loginFrame = new LoginFrame(facialRecognation);
+		                
+		                //New thread for Camera input
+		                new Thread(new Runnable() {
+		        			@Override
+		        			public void run()
+		        			{
+		        				loginFrame.runMainLoop();
+		        			}
+		        		}).start();
 		            }
 		        });
 			}
